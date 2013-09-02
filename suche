@@ -1,7 +1,7 @@
 <h2>Ergebnis Ihrer Suchanfrage</h2>
 
 <?php
-// Code, den ich auf meiner Website www.pixel4web.de verwende
+// Code-Auszug, den ich auf meiner Website www.pixel4web.de verwende
 $fehler = false;
 $hinweisHeadline = '<h3>Keine gültige Abfrage</h3>'."\n";
 $hinweis = '';
