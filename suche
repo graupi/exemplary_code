@@ -1,0 +1,137 @@
+<h2>Ergebnis Ihrer Suchanfrage</h2>
+
+<?php
+// Code, den ich auf meiner Website www.pixel4web.de verwende
+$fehler = false;
+$hinweisHeadline = '<h3>Keine gültige Abfrage</h3>'."\n";
+$hinweis = '';
+mb_internal_encoding('UTF-8');
+
+if(isset($suchworte)) {
+    $suchworte = trim($suchworte);
+    $suchworte = mb_strtolower($suchworte); // 'normales' strtolower macht Schwierigkeiten mit Umlauten als Großbuchstabe
+
+    $einzelne_suchworte = explode(" ", $suchworte);
+    $anz_suchworte = count($einzelne_suchworte);
+    
+    if($anz_suchworte > 3) {
+        $hinweis .= '<p>Bitte nicht mehr als drei Suchworte eingeben.</p>'."\n";
+        $fehler = true;
+    }
+    
+    foreach($einzelne_suchworte as $val) {
+        if(!preg_match("/^[\wäöüßÄÖÜ -]{3,}$/", $val)) { // von uns erlaubte Sonderzeichen kontrollieren
+			$hinweis .= '<p>Mindestens ein Suchbegriff enthält unerlaubte Sonderzeichen und/oder ist zu kurz. Außer den Umlauten sind das Minuszeichen sowie das Leerzeichen erlaubt. Bitte mindestens drei Buchstaben pro Suchwort eingeben.</p>'."\n";
+            $fehler = true;
+            break;
+        }
+    } 	
+    
+    if($fehler === false) {
+        $treffer_array = array();
+        foreach(glob("./ordnername",GLOB_ONLYDIR) as $dir) {  // das Verzeichnis "ordnername" durchgehen
+            $verzeichnis = openDir($dir);                  
+            while($file = readDir($verzeichnis)) {
+                if($file != "." && $file != ".." && $file != '404.php' && $file != 'suchauswertung.php') {
+                    $dat_name = "ordnername/".$file;
+                    $handle = @fopen($dat_name, "r");
+					
+                    if($handle) {
+                        while(!feof($handle)) {
+                            $buffer = fgetss($handle, 4096);
+                            $suchBuffer = mb_strtolower($buffer); // 'normales' strtolower macht Schwierigkeiten mit Umlauten als Großbuchstabe
+
+                            foreach($einzelne_suchworte as $suchwort) {
+                                if(!empty($buffer) && !empty($suchwort)) {
+                                    if(stristr($buffer, $suchwort)) {
+                                        $pos = strpos($suchBuffer, $suchwort);
+                                        $laengeSuchwort = strlen($suchwort);
+                                        $start = $pos - 30; // später max. 30 Zeichen vor dem Suchtreffer ausgeben
+                                        if($start <= 0) { // wenn vor dem Suchwort weniger als 30 Zeichen vorhanden, benötigen wir das &hellip; nicht, da es vor dem auszugebenden Suchtreffer-String keinen Text gibt
+                                            $start = 0;
+                                            $hellipAnfang = '';
+                                        }
+                                        else {
+                                            $hellipAnfang = '&hellip;';
+                                        }
+                                        
+                                        $teilstring1 = substr($buffer, $start);
+                                        
+                                        if($start > 0) {
+                                            $erstesLeerzeichen = strpos($teilstring1, ' '); // das erste Leerzeichen suchen, um ab dort den Suchtreffer-String auszugeben
+                                            $teilstring1 = substr($teilstring1, $erstesLeerzeichen);
+                                        }
+                                        
+                                        $laenge = $pos - $start + $laengeSuchwort + 30; // Position Suchtreffer minus der max. 30 Zeichen am Anfang plus Länge des Suchwortes plus ebenfalls 30 Zeichen	am Ende									
+                                        
+                                        if($laenge > strlen($teilstring1)) { // wenn die eben ermittelte Länge größer ist als die Rest-Stringlänge des Satzes mit dem Suchwort ...
+                                            $teilstring3 = $teilstring1; // ... haben wir schon den auszugebenden Treffertext ...
+                                            $hellipEnde = ''; // ... und brauchen am Ende auch keine drei Punkte, die darauf hindeuten, dass der Originaltext noch weiter geht
+                                        }
+                                        else {
+                                            $teilstring2 = substr($teilstring1, 0, $laenge); // den bisher ermittelten Suchtreffer-String nehmen und nach der vorher bestimmten Länge abschneiden ...
+                                            $letztesLeerzeichen = strrpos($teilstring2, ' '); // ... darin dann mit strrpos (mit zwei R) das letzte Vorkommen eines leerzeichens finden ...                                
+                                            $teilstring3 = substr($teilstring2, 0, $letztesLeerzeichen); // ... und schön am letzten Leerzeichen abschneden ...
+                                            $hellipEnde = ' &hellip;'; // ... und am Ende drei Punkte anfügen als Hinweis darfauf, dass der Text auf der entsprechenden Menüseite noch weiter geht
+                                        }                                
+                                        
+                                        $teilstring3_klein = mb_strtolower($teilstring3);
+                                        $bb = strpos($teilstring3_klein, $suchwort); // in dem später anzuzeigenden Suchtreffer-String das Suchwort (nochmal) finden ...
+                                        
+                                        $t = substr($teilstring3, $bb, $laengeSuchwort); // ... in eine Variable speichern ...
+                                        $t = '<span class="highlight">'.$t.'</span>'; // ... und das Suchwort irgendwie markieren ...
+                                        $teilstring4 = eregi_replace($suchwort, $t, $teilstring3); // ... das Suchwort in dem später auszugebenden Suchtreffer-String durch das hervorgehobene Suchwort austauschen
+                                        $link_arr = explode("/",$dat_name); //  'ordnername/' brauchen wir nicht
+                                        $treffer_array[$link_arr[1]] .= $hellipAnfang.$teilstring4.$hellipEnde.'<br />'; // und zum Schluss den optimierten Suchtreffer-String in ein Array schieben
+										// die Suchtreffer-Strings haben dann am Anfang drei Punkte, wenn auch wirklich noch Text vor dem Teilstring steht; ebenso am Ende, sodass
+										// der Nutzer immer sieht, ob auf der Menüseite noch vor bzw. hinter dem ausgegebenen Teilstring Text kommt oder nicht
+                                    }
+                                }
+                            }                        
+                        }                        
+                    }    
+                    fclose($handle);                   
+                }
+            }    
+        }
+
+        $laenge_array = count($treffer_array);
+
+        if($laenge_array > 0) {        
+            echo '<ul id="trefferliste">'."\n";
+			// mit foreach das Treffer-Array durchgehen und zeilenweise ausgeben
+            foreach($treffer_array as $link => $wert) {                        
+                $link = substr($link, 0, -4); // .php abschneiden
+                echo '<li><a href="'.$link.'" title="zum Menüpunkt wechseln">'.$link.'</a>'.$wert.'</li>'."\n";                             
+            }
+            echo '</ul>'."\n";
+        }
+        else {
+            echo '<p>Leider gibt es keine Treffer zu Ihrer Suchanfrage.</p>'."\n";
+        }
+    }
+    else {
+        echo $hinweisHeadline;
+        echo $hinweis;
+    }
+}
+else {
+    echo '<p>Es wurde kein Suchwort eingegeben.</p>'."\n";
+}		
+
+<script type="text/javascript" charset="UTF-8">
+/* <![CDATA[ */
+$(document).ready(function() {
+    var inhalt, link;
+    <?php
+	// mit jQuery die Links optimieren
+    foreach($treffer_array as $val => $wert) {
+        $val = substr($val, 0, -4); // .php abschneiden
+        echo 'link = $("#navigation a[href*=\''.$val.'\']").attr(\'href\');'."\n"; // deas vollständige href ermitteln, so wie in der navi angegeben (also ggf. mit Unterverzeichnissen)
+        echo 'inhalt = $("#navigation a[href*=\''.$val.'\']").html();'."\n"; // den Linktext ermitteln; wird dieser in der Navi geändert, haben wie hier mmer automatisch den richtigen Linktext
+        echo '$("ul#trefferliste a[href*=\''.$val.'\']").attr(\'href\', link).attr(\'title\', \'zum Menüpunkt “\'+inhalt+\'” wechseln\').html(inhalt+\': \');'."\n\n"; // alles schön zusammenbasteln
+    }
+    ?>
+}); 
+/* ]]> */
+</script>
