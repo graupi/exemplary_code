@@ -21,7 +21,7 @@ if(isset($suchworte)) {
     
     foreach($einzelne_suchworte as $val) {
         if(!preg_match("/^[\wäöüßÄÖÜ -]{3,}$/", $val)) { // von uns erlaubte Sonderzeichen kontrollieren
-			$hinweis .= '<p>Mindestens ein Suchbegriff enthält unerlaubte Sonderzeichen und/oder ist zu kurz. Außer den Umlauten sind das Minuszeichen sowie das Leerzeichen erlaubt. Bitte mindestens drei Buchstaben pro Suchwort eingeben.</p>'."\n";
+            $hinweis .= '<p>Mindestens ein Suchbegriff enthält unerlaubte Sonderzeichen und/oder ist zu kurz. Außer den Umlauten sind das Minuszeichen sowie das Leerzeichen erlaubt. Bitte mindestens drei Buchstaben pro Suchwort eingeben.</p>'."\n";
             $fehler = true;
             break;
         }
@@ -83,8 +83,8 @@ if(isset($suchworte)) {
                                         $teilstring4 = eregi_replace($suchwort, $t, $teilstring3); // ... das Suchwort in dem später auszugebenden Suchtreffer-String durch das hervorgehobene Suchwort austauschen
                                         $link_arr = explode("/",$dat_name); //  'ordnername/' brauchen wir nicht
                                         $treffer_array[$link_arr[1]] .= $hellipAnfang.$teilstring4.$hellipEnde.'<br />'; // und zum Schluss den optimierten Suchtreffer-String in ein Array schieben
-										// die Suchtreffer-Strings haben dann am Anfang drei Punkte, wenn auch wirklich noch Text vor dem Teilstring steht; ebenso am Ende, sodass
-										// der Nutzer immer sieht, ob auf der Menüseite noch vor bzw. hinter dem ausgegebenen Teilstring Text kommt oder nicht
+					// die Suchtreffer-Strings haben dann am Anfang drei Punkte, wenn auch wirklich noch Text vor dem Teilstring steht; ebenso am Ende, sodass
+					// der Nutzer immer sieht, ob auf der Menüseite noch vor bzw. hinter dem ausgegebenen Teilstring Text kommt oder nicht
                                     }
                                 }
                             }                        
@@ -99,10 +99,10 @@ if(isset($suchworte)) {
 
         if($laenge_array > 0) {        
             echo '<ul id="trefferliste">'."\n";
-			// mit foreach das Treffer-Array durchgehen und zeilenweise ausgeben
+	    // mit foreach das Treffer-Array durchgehen und zeilenweise ausgeben
             foreach($treffer_array as $link => $wert) {                        
                 $link = substr($link, 0, -4); // .php abschneiden
-                echo '<li><a href="'.$link.'" title="zum Menüpunkt wechseln">'.$link.'</a>'.$wert.'</li>'."\n";                             
+                echo '<li><a href="'.$link.'" title="zum Menüpunkt wechseln">'.$link.'</a>'.$wert.'</li>'."\n";  // Link wird am Schluss noch mit jQuery bearbeitet                           
             }
             echo '</ul>'."\n";
         }
@@ -124,10 +124,10 @@ else {
 $(document).ready(function() {
     var inhalt, link;
     <?php
-	// mit jQuery die Links optimieren
+    // mit jQuery die Links optimieren
     foreach($treffer_array as $val => $wert) {
         $val = substr($val, 0, -4); // .php abschneiden
-        echo 'link = $("#navigation a[href*=\''.$val.'\']").attr(\'href\');'."\n"; // deas vollständige href ermitteln, so wie in der navi angegeben (also ggf. mit Unterverzeichnissen)
+        echo 'link = $("#navigation a[href*=\''.$val.'\']").attr(\'href\');'."\n"; // das vollständige href ermitteln, so wie in der navi angegeben (also ggf. mit Unterverzeichnissen)
         echo 'inhalt = $("#navigation a[href*=\''.$val.'\']").html();'."\n"; // den Linktext ermitteln; wird dieser in der Navi geändert, haben wie hier mmer automatisch den richtigen Linktext
         echo '$("ul#trefferliste a[href*=\''.$val.'\']").attr(\'href\', link).attr(\'title\', \'zum Menüpunkt “\'+inhalt+\'” wechseln\').html(inhalt+\': \');'."\n\n"; // alles schön zusammenbasteln
     }
