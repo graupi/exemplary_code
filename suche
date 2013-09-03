@@ -76,15 +76,13 @@ if(isset($suchworte)) {
                                         }                                
                                         
                                         $teilstring3_klein = mb_strtolower($teilstring3);
-                                        $bb = strpos($teilstring3_klein, $suchwort); // in dem später anzuzeigenden Suchtreffer-String das Suchwort (nochmal) finden ...
+                                        $bb = strpos($teilstring3_klein, $suchwort); 
                                         
-                                        $t = substr($teilstring3, $bb, $laengeSuchwort); // ... in eine Variable speichern ...
-                                        $t = '<span class="highlight">'.$t.'</span>'; // ... und das Suchwort irgendwie markieren ...
-                                        $teilstring4 = eregi_replace($suchwort, $t, $teilstring3); // ... das Suchwort in dem später auszugebenden Suchtreffer-String durch das hervorgehobene Suchwort austauschen
+                                        $t = substr($teilstring3, $bb, $laengeSuchwort); // im nicht verkleinerten Text das Suchwort finden, damit später bei dem hervorgehobenen Text Groß- und Kleinschreibung erhalten bleibt ...
+                                        $t = '<span class="highlight">'.$t.'</span>'; // ... nun das Suchwort markieren ...
+                                        $teilstring4 = eregi_replace($suchwort, $t, $teilstring3); // ... anschließend das Suchwort in dem später auszugebenden Suchtreffer-String durch das hervorgehobene Suchwort austauschen
                                         $link_arr = explode("/",$dat_name); //  'ordnername/' brauchen wir nicht
                                         $treffer_array[$link_arr[1]] .= $hellipAnfang.$teilstring4.$hellipEnde.'<br />'; // und zum Schluss den optimierten Suchtreffer-String in ein Array schieben
-					// die Suchtreffer-Strings haben dann am Anfang drei Punkte, wenn auch wirklich noch Text vor dem Teilstring steht; ebenso am Ende, sodass
-					// der Nutzer immer sieht, ob auf der Menüseite noch vor bzw. hinter dem ausgegebenen Teilstring Text kommt oder nicht
                                     }
                                 }
                             }                        
